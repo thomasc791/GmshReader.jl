@@ -1,5 +1,10 @@
 module GmshReader
 
-# Write your package code here.
+export readFile
+
+include("Entity.jl")
+export Entity
+
+include("GmshFileReader.jl")
 
 end

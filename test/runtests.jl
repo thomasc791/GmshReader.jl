@@ -2,5 +2,5 @@ using GmshReader
 using Test
 
 @testset "GmshReader.jl" begin
-    # Write your tests here.
+  @test GmshReader.readFile("test/input/singleMesh.msh")
 end
