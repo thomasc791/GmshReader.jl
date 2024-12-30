@@ -18,11 +18,11 @@ function readFile(file::AbstractString)
   f = open(readlines, file, "r")
   line = [1]
   readFormat(f, line)
-  physicalGroups = readPhysicalGroups(f, line)
-  entities = readEntities(f, line)
-  readPartialEntities(f, line)
-  nodes = readNodes(f, line, entities)
-  elements = readElements(f, line, entities)
+  @time physicalGroups = readPhysicalGroups(f, line)
+  @time entities = readEntities(f, line)
+  @time readPartialEntities(f, line)
+  @time nodes = readNodes(f, line, entities)
+  @time elements = readElements(f, line, entities)
   return physicalGroups, entities, nodes, elements
 end
 
