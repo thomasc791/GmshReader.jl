@@ -2,5 +2,5 @@ using GmshReader
 using Test
 
 @testset "GmshReader.jl" begin
-  @test GmshReader.readFile("test/input/singleMesh.msh")
+  mesh = GmshReader.readFile("input/1x1-square.msh")
 end

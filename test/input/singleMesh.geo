@@ -1,4 +1,4 @@
-meshSize = 2;
+meshSize = 1000;
 ySize = meshSize+1;
 xSize = meshSize*5+1;
 
@@ -32,21 +32,3 @@ Recombine Surface {1};
 
 Mesh 2;
 Save "singleMesh.msh";
-//+
-Hide "*";
-//+
-Show {
-  Point{2}; Point{3}; Curve{2}; 
-}
-//+
-Hide "*";
-//+
-Show {
-  Point{2}; Point{3}; Curve{2}; 
-}
-//+
-Hide "*";
-//+
-Show {
-  Point{2}; Point{3}; Curve{2}; 
-}
