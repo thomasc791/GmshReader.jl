@@ -1,6 +1,5 @@
 struct Elements
   # TODO: 
-  using CSV: check
   zero::Matrix{Int}
   startOne::Int
   one::Matrix{Int}
@@ -105,16 +104,14 @@ function readNodes(f, line, entities)
   for e in 1:numEntityBlocks
     _ = entities[e]
     entityBlock, line = parseLine(f, line, Int, true)
-    node_index = fill(0, entityBlock[4])
-    for n in 1:entityBlock[4]
-      node_index[n] = parseLine(f, line + n - 1, Int)[1]
+    elemsInBlock = entityBlock[4]
+    @views node_index = parse.(Int, f[line:line+elemsInBlock-1])
+    line += elemsInBlock
+    @views nodeVector = split.(f[line:line+elemsInBlock-1])
+    @threads for n in 1:elemsInBlock
+      nodes[node_index[n], 1:end] .= parse.(Float64, nodeVector[n])
     end
-    line += entityBlock[4]
-    # TODO: make sure that there are no data races for the line number
-    for n in 1:entityBlock[4]
-      nodes[node_index[n], 1:end] .= parseLine(f, line + n - 1, Float64)
-    end
-    line += entityBlock[4]
+    line += elemsInBlock
   end
   line = checkSection(section, f, line; isEnd=true)
   return (nodes, line)
@@ -129,13 +126,15 @@ function readElements(f, line, entities)
   elements = fill(Vector{Int}(), numElements)
   for _ in 1:numEntityBlocks
     entityBlock, line = parseLine(f, line, Int, true)
-    for n in 1:entityBlock[4]
-      element = parseLine(f, line + n - 1, Int)
+    elemsInBlock = entityBlock[4]
+    @views nodeVector = split.(f[line:line+elemsInBlock-1])
+    @threads for n in 1:entityBlock[4]
+      element = parse.(Int, nodeVector[n])
       elements[element[1]] = element[2:end]
     end
     line += entityBlock[4]
   end
-  checkSection(section, f, line; isEnd=true)
+  line = checkSection(section, f, line; isEnd=true)
   return (elements, line)
 end
 
@@ -159,7 +158,6 @@ function checkSection(sectionName::String, f, line; isEnd::Bool=false)
   section = f[line]
   line += 1
   isEnd && @assert section == "\$End$sectionName" ["Wrong section name, expected $sectionName, got: $section"]
-  display((line, section))
   isEnd && return line
   @assert section == "\$$sectionName" "Wrong section name, expected $sectionName, got: $section"
   return line
