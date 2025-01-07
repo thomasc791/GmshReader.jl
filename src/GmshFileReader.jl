@@ -101,13 +101,13 @@ function readNodes(f, line, entities)
   numEntityBlocks = entityBlocks[1]
   numNodes = entityBlocks[2]
   nodes = Array{Float64,2}(undef, numNodes, 3)
-  for e in 1:numEntityBlocks
+  @views for e in 1:numEntityBlocks
     _ = entities[e]
     entityBlock, line = parseLine(f, line, Int, true)
     elemsInBlock = entityBlock[4]
-    @views node_index = parse.(Int, f[line:line+elemsInBlock-1])
+    node_index = parse.(Int, f[line:line+elemsInBlock-1])
     line += elemsInBlock
-    @views nodeVector = split.(f[line:line+elemsInBlock-1])
+    nodeVector = split.(f[line:line+elemsInBlock-1], " "; keepempty=false)
     @threads for n in 1:elemsInBlock
       nodes[node_index[n], 1:end] .= parse.(Float64, nodeVector[n])
     end
@@ -124,10 +124,10 @@ function readElements(f, line, entities)
   numEntityBlocks = entityBlocks[1]
   numElements = entityBlocks[2]
   elements = fill(Vector{Int}(), numElements)
-  for _ in 1:numEntityBlocks
+  @views for _ in 1:numEntityBlocks
     entityBlock, line = parseLine(f, line, Int, true)
     elemsInBlock = entityBlock[4]
-    @views nodeVector = split.(f[line:line+elemsInBlock-1])
+    nodeVector = split.(f[line:line+elemsInBlock-1], " "; keepempty=false)
     @threads for n in 1:entityBlock[4]
       element = parse.(Int, nodeVector[n])
       elements[element[1]] = element[2:end]
