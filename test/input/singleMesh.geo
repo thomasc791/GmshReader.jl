@@ -1,4 +1,4 @@
-meshSize = 1000;
+meshSize = 200;
 ySize = meshSize+1;
 xSize = meshSize*5+1;
 

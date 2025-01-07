@@ -1,5 +1,6 @@
 struct Elements
-  # TODO 
+  # TODO: 
+  using CSV: check
   zero::Matrix{Int}
   startOne::Int
   one::Matrix{Int}
@@ -15,59 +16,63 @@ struct PhysicalGroup
 end
 
 function readFile(file::AbstractString)
-  f = open(readlines, file, "r")
-  line = [1]
-  readFormat(f, line)
-  @time physicalGroups = readPhysicalGroups(f, line)
-  @time entities = readEntities(f, line)
-  @time readPartialEntities(f, line)
-  @time nodes = readNodes(f, line, entities)
-  @time elements = readElements(f, line, entities)
+  f::Vector{String} = open(readlines, file, "r")
+  line = 1
+  line = readFormat(f, line)
+  physicalGroups, line = readPhysicalGroups(f, line)
+  entities, line = readEntities(f, line)
+  readPartialEntities(f, line)
+  nodes, line = readNodes(f, line, entities)
+  elements, line = readElements(f, line, entities)
   return physicalGroups, entities, nodes, elements
 end
 
 function readFormat(f, line)
   section = "MeshFormat"
-  checkPossibleSection(section, f, line)
-  version, fileType, _ = readLine(f, line)
-  @assert version == "4.1" "Wrong version number"
-  @assert fileType == "0" "Wrong filetype"
-  println(("Gmsh file version: " * version))
-  checkSection(section, f, line; isEnd=true)
-  return
+  line = checkSection(section, f, line)
+  formatInfo, line = readLine(f, line)
+  @assert formatInfo[1] == "4.1" "Wrong version number"
+  @assert formatInfo[2] == "0" "Wrong filetype"
+  println(("Gmsh file version: " * formatInfo[1]))
+  line = checkSection(section, f, line; isEnd=true)
+  return line
 end
 
 function readPhysicalGroups(f, line)
   section = "PhysicalNames"
   if !checkPossibleSection(section, f, line)
     return false
+  else
+    line = checkSection(section, f, line)
   end
 
-  numGroups = readLine(f, line)
+  numGroups, line = parseLine(f, line, Int, true)
   groupDict = Dict{String,PhysicalGroup}()
-  for _ in 1:parse(Int, numGroups)
-    dim, num, groupName = readLine(f, line)
-    dimGroup = parse(Int, dim)
-    numGroup = parse(Int, num)
-    groupName = groupName[2:end-1]
+  for _ in 1:numGroups[1]
+    groupInfo, line = readLine(f, line)
+    dimGroup = parse(Int8, groupInfo[1])
+    numGroup = parse(Int8, groupInfo[2])
+    groupName = groupInfo[3]
     physGroup = PhysicalGroup(dimGroup, numGroup)
     get!(groupDict, groupName, physGroup)
   end
-  checkSection(section, f, line; isEnd=true)
-  return groupDict
+  line = checkSection(section, f, line; isEnd=true)
+  return (groupDict, line)
 end
 
 function readEntities(f, line)
   section = "Entities"
   if !checkPossibleSection(section, f, line)
     return false
+  else
+    line = checkSection(section, f, line)
   end
 
-  numEntities = parseLine(f, line, Int)
+  numEntities, line = parseLine(f, line, Int, true)
   entities = Vector{Any}()
   for (dim, e) in enumerate(numEntities[numEntities.>0])
     for _ in 1:e
-      entityVector = readLine(f, line)
+      entityVector, line = readLine(f, line)
       if dim == 1
         hasPhysTag::Bool = parse(Int, entityVector[5]) != 0
       else
@@ -77,79 +82,92 @@ function readEntities(f, line)
       push!(entities, entity)
     end
   end
-  checkSection(section, f, line; isEnd=true)
-  return entities
+  line = checkSection(section, f, line; isEnd=true)
+  return (entities, line)
 end
 
 function readPartialEntities(f, line)
   section = "PartialEntities"
   if !checkPossibleSection(section, f, line)
     return false
+  else
+    line = checkSection(section, f, line)
   end
 end
 
 function readNodes(f, line, entities)
   section = "Nodes"
-  checkPossibleSection(section, f, line)
-  numEntityBlocks, numNodes, minNodeTag, maxNodeTag = parseLine(f, line, Int)
+  line = checkSection(section, f, line)
+  entityBlocks, line = parseLine(f, line, Int, true)
+  numEntityBlocks = entityBlocks[1]
+  numNodes = entityBlocks[2]
   nodes = Array{Float64,2}(undef, numNodes, 3)
-  n = 0
   for e in 1:numEntityBlocks
-    entity = entities[e]
-    entityDim, entityTag, parametric, numNodesInBlock = parseLine(f, line, Int)
-    nodesInBlock = zeros(Int, numNodesInBlock)
-    for n in 1:numNodesInBlock
-      nodesInBlock[n] = parse(Int, readLine(f, line))
+    _ = entities[e]
+    entityBlock, line = parseLine(f, line, Int, true)
+    node_index = fill(0, entityBlock[4])
+    for n in 1:entityBlock[4]
+      node_index[n] = parseLine(f, line, Int)[1]
     end
-    for n in 1:numNodesInBlock
-      nodes[nodesInBlock[n], 1:end] = parseLine(f, line, Float64)
+    line += entityBlock[4]
+    # TODO: make sure that there are no data races for the line number
+    for n in 1:entityBlock[4]
+      nodes[node_index[n], 1:end] .= parseLine(f, line, Float64)
     end
+    line += entityBlock[4]
   end
-  checkSection(section, f, line; isEnd=true)
-  return nodes
+  line = checkSection(section, f, line; isEnd=true)
+  return (nodes, line)
 end
 
 function readElements(f, line, entities)
   section = "Elements"
-  checkPossibleSection(section, f, line)
-  numEntityBlocks, numElements, _, _ = parseLine(f, line, Int)
+  line = checkSection(section, f, line)
+  entityBlocks, line = parseLine(f, line, Int, true)
+  numEntityBlocks = entityBlocks[1]
+  numElements = entityBlocks[2]
   elements = fill(Vector{Int}(), numElements)
   for _ in 1:numEntityBlocks
-    _, _, _, numElementsInBlock = parseLine(f, line, Int)
-    for _ in 1:numElementsInBlock
+    entityBlock, line = parseLine(f, line, Int, true)
+    for _ in 1:entityBlock[4]
       element = parseLine(f, line, Int)
       elements[element[1]] = element[2:end]
     end
+    line += entityBlock[4]
   end
   checkSection(section, f, line; isEnd=true)
-  return elements
+  return (elements, line)
+end
+
+function parseLine(f, line, type::Type, add_line::Bool)
+  return (parse.(type, readLine(f, line; add_line=add_line)[1]), line + 1)
 end
 
 function parseLine(f, line, type::Type)
-  return parse.(type, readLine(f, line))
+  return parse.(type, readLine(f, line; add_line=false)[1])
 end
 
-function readLine(f, line)
-  currentLine = f[line][1]
-  line[1] += 1
-  splitLine = split(currentLine, " "; keepempty=false)
-  splitLine.size[1] == 1 && return currentLine
-  return splitLine
+function readLine(f, line; add_line::Bool=true)
+  currentLine = f[line]
+  splitLine = split(currentLine, ' '; keepempty=false)
+  !add_line && return (splitLine, line)
+  line += 1
+  return (splitLine, line)
 end
 
 function checkSection(sectionName::String, f, line; isEnd::Bool=false)
-  section = readLine(f, line)
+  section = f[line]
+  line += 1
   isEnd && @assert section == "\$End$sectionName" ["Wrong section name, expected $sectionName, got: $section"]
-  isEnd && return
+  display((line, section))
+  isEnd && return line
   @assert section == "\$$sectionName" "Wrong section name, expected $sectionName, got: $section"
-  return
+  return line
 end
 
 function checkPossibleSection(sectionName::String, f, line)
-  section = readLine(f, line)
-  if section != "\$$sectionName"
-    line[1] -= 1
-    return false
-  end
+  section = f[line]
+  section != "\$$sectionName" && return false
+  line += 1
   return true
 end
