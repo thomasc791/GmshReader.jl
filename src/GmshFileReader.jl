@@ -107,12 +107,12 @@ function readNodes(f, line, entities)
     entityBlock, line = parseLine(f, line, Int, true)
     node_index = fill(0, entityBlock[4])
     for n in 1:entityBlock[4]
-      node_index[n] = parseLine(f, line, Int)[1]
+      node_index[n] = parseLine(f, line + n - 1, Int)[1]
     end
     line += entityBlock[4]
     # TODO: make sure that there are no data races for the line number
     for n in 1:entityBlock[4]
-      nodes[node_index[n], 1:end] .= parseLine(f, line, Float64)
+      nodes[node_index[n], 1:end] .= parseLine(f, line + n - 1, Float64)
     end
     line += entityBlock[4]
   end
@@ -129,8 +129,8 @@ function readElements(f, line, entities)
   elements = fill(Vector{Int}(), numElements)
   for _ in 1:numEntityBlocks
     entityBlock, line = parseLine(f, line, Int, true)
-    for _ in 1:entityBlock[4]
-      element = parseLine(f, line, Int)
+    for n in 1:entityBlock[4]
+      element = parseLine(f, line + n - 1, Int)
       elements[element[1]] = element[2:end]
     end
     line += entityBlock[4]
