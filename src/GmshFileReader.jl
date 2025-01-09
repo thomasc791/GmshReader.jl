@@ -4,14 +4,15 @@ struct PhysicalGroup
 end
 
 function readFile(file::AbstractString)
-  f::Vector{String} = open(readlines, file, "r")
+  println()
+  @time f::Vector{String} = readlines(file)
   line = 1
   line = readFormat(f, line)
-  physicalGroups, line = readPhysicalGroups(f, line)
-  entities, line = readEntities(f, line)
-  _, line = readPartialEntities(f, line)
-  nodes, line = readNodes(f, line, entities)
-  elements, line = readElements(f, line, entities)
+  @time physicalGroups, line = readPhysicalGroups(f, line)
+  @time entities, line = readEntities(f, line)
+  @time _, line = readPartialEntities(f, line)
+  @time nodes, line = readNodes(f, line, entities)
+  @time elements, line = readElements(f, line, entities)
   return physicalGroups, entities, nodes, elements
 end
 
@@ -90,9 +91,6 @@ function readNodes(f, line, entities)
   nodes = Array{Float64,2}(undef, 3, numNodes)
   @views for e in 1:numEntityBlocks
     entityBlock, line = parseLine(f, line, Int, true)
-    entDim, entTag = entityBlock[1:2]
-    entity = entities[entDim+1, entTag]
-    display(entity)
     elemsInBlock = entityBlock[4]
     node_index = parse.(Int, f[line:line+elemsInBlock-1])
     line += elemsInBlock
@@ -114,20 +112,23 @@ function readElements(f, line, entities)
   numElements = entityBlocks[2]
   elements = Array{Vector{Int},1}(undef, numElements)
   @views for e in 1:numEntityBlocks
-    entity = entities[e]
     entityBlock, line = parseLine(f, line, Int, true)
-    # display(entity)
-    # display(entityBlock)
+    entDim, entTag = entityBlock[1:2]
+    entity = entities[entDim+1][entTag]
     elemsInBlock = entityBlock[4]
     nodeVector = split.(f[line:line+elemsInBlock-1], " "; keepempty=false)
     @threads for n in 1:entityBlock[4]
-      element = parse.(Int, nodeVector[n])
-      elements[element[1]] = element[2:end]
+      inputElement!(elements, parse.(Int, nodeVector[n]))
     end
     line += entityBlock[4]
   end
   line = checkSection(section, f, line; isEnd=true)
   return (elements, line)
+end
+
+function inputElement!(elementList, element)
+  index = element[1]
+  elementList[index] = @view element[2:end]
 end
 
 function parseLine(f, line, type::Type, add_line::Bool)
