@@ -22,3 +22,26 @@ struct Entity{T,S}
     new{D,B}(dim, tag, numPhysTags, physicalTags)
   end
 end
+
+struct PhysicalGroup
+  dim::Int8
+  tag::Int8
+
+  function PhysicalGroup(dim::Int, tag::Int)
+    new(dim, tag)
+  end
+  function PhysicalGroup(vals::Array{Int,1})
+    new(vals[1], vals[2])
+  end
+end
+
+struct Elements
+  D0::FMat
+  D1::FMat
+  D2::FMat
+  D3::FMat
+
+  function Elements(vertices, edges, surfaces, volumes)
+    new(FMat(vertices), FMat(edges), FMat(surfaces), FMat(volumes))
+  end
+end

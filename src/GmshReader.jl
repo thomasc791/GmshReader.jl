@@ -1,17 +1,14 @@
 module GmshReader
 
 using Base.Threads
-using StaticArrays
+using FlatMat
 
 include("Types.jl")
 export Entity
-
-include("FlatMat.jl")
-export FlatMat
-export get_elem
+export PhysicalGroup
+export Elements
 
 include("GmshFileReader.jl")
-export PhysicalGroup
 
-export readFile
+export readfile
 end
