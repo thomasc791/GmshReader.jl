@@ -1,5 +1,6 @@
 [deps]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 FlatMat = "7c869e6c-c1f0-4866-9669-0eca92445837"
+Gmsh = "705231aa-382f-11e9-3f0c-b7cb4346fdeb"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

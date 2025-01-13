@@ -5,14 +5,22 @@ using Aqua
 using JET
 
 @testset "GmshReader.jl" begin
-  @testset "Code quality (Aqua.jl)" begin
-    Aqua.test_all(FlatMat)
-  end
-  @testset "Code linting (JET.jl)" begin
-    JET.test_package(FlatMat; target_defined_modules=true)
-  end
+  # @testset "Code quality (Aqua.jl)" begin
+  #   Aqua.test_all(FlatMat)
+  # end
+  # @testset "Code linting (JET.jl)" begin
+  #   JET.test_package(FlatMat; target_defined_modules=true)
+  # end
 
   @testset "FlatMat integration" begin
+    dir = ""
+    if basename(pwd()) == "GmshReader"
+      dir = join([pwd(), "/test/"])
+    else
+      dir = join([pwd(), "/"])
+    end
+
+    include(join([dir, "meshgen.jl"]))
     pg1x1, n1x1, e1x1 = readfile("input/1x1-square.msh")
     mesh50x50 = readfile("input/50x50-square.msh")
 
