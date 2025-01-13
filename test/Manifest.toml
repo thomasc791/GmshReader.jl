@@ -57,8 +57,6 @@ version = "1.11.0"
 
 [[deps.FlatMat]]
 git-tree-sha1 = "0e07346d1f577f23e7c2c471854913b216c2d6d2"
-repo-rev = "master"
-repo-url = "https://github.com/thomasc791/FlatMat.jl"
 uuid = "7c869e6c-c1f0-4866-9669-0eca92445837"
 version = "0.0.1"
 
