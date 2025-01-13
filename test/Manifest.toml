@@ -56,11 +56,11 @@ uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 version = "1.11.0"
 
 [[deps.FlatMat]]
-git-tree-sha1 = "3b7c9814be677947ee330b1970128a76545ac0eb"
+git-tree-sha1 = "0e07346d1f577f23e7c2c471854913b216c2d6d2"
 repo-rev = "master"
-repo-url = "/home/thomas/.partition/documents/high-tech-engineering/thesis/implementation/FlatMat"
+repo-url = "https://github.com/thomasc791/FlatMat.jl"
 uuid = "7c869e6c-c1f0-4866-9669-0eca92445837"
-version = "1.0.0-DEV"
+version = "0.0.1"
 
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]

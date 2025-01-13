@@ -113,6 +113,8 @@ function readelements!(f, line, physGroup, pgElements)
     nodeVector = split.(f[line:line+elemsInBlock-1], " "; keepempty=false)
     elementIndex = parse.(Int, first.(nodeVector))
     @threads for n in 1:elemsInBlock
+      # TODO: Add FlatMats to elements instead of regular elements
+      # NOTE: Discuss with Paul how to implement the pgs with FMat
       elements[elementIndex[n]] = parse.(Int, nodeVector[n][2:end])
     end
     if haskey(physGroup, pg)
