@@ -1,4 +1,4 @@
-meshSize = 50;
+meshSize = 1000;
 ySize = meshSize+1;
 xSize = meshSize+1;
 
@@ -32,4 +32,4 @@ Physical Curve("left", 2) = {4};
 Recombine Surface {1};
 
 Mesh 2;
-Save "50x50-square.msh";
+Save "1000x1000-square.msh";

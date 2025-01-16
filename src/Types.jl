@@ -1,47 +1,49 @@
 struct Entity{T,S}
-  dim::UInt8
+  dim::UInt64
   tag::Int
   numPhysicalTags::UInt
   physicalTags::Vector{Int}
 
-  function Entity{0,B}(entityVector) where {B}
-    typeassert(B, Bool)
-    dim = 0
-    tag = parse(Int, entityVector[1])
-    numPhysTags = parse(UInt8, entityVector[5])
-    physicalTags = parse.(Int, entityVector[end-numPhysTags+1:end])
-    new{0,B}(dim, tag, numPhysTags, physicalTags)
-  end
+  Entity{T,S}(dim, tag, numPhysicalTags, physicalTags) where {T,S} = new{T,S}(dim, tag, numPhysicalTags, physicalTags)
+end
 
-  function Entity{D,B}(entityVector) where {D,B}
-    typeassert(B, Bool)
-    dim = D
-    tag = parse(Int, entityVector[1])
-    numPhysTags = parse(UInt8, entityVector[8])
-    physicalTags = parse.(Int, entityVector[9:9+numPhysTags-1])
-    new{D,B}(dim, tag, numPhysTags, physicalTags)
-  end
+function Entity{0,B}(entityVector) where {B}
+  typeassert(B, Bool)
+  dim = 0
+  tag = parse(Int, entityVector[1])
+  numPhysTags = parse(UInt8, entityVector[5])
+  physicalTags = parse.(Int, entityVector[end-numPhysTags+1:end])
+  Entity{0,B}(dim, tag, numPhysTags, physicalTags)
+end
+
+function Entity{D,B}(entityVector) where {D,B}
+  typeassert(B, Bool)
+  dim = D
+  tag = parse(Int, entityVector[1])
+  numPhysTags = parse(UInt8, entityVector[8])
+  physicalTags = parse.(Int, entityVector[9:9+numPhysTags-1])
+  Entity{D,B}(dim, tag, numPhysTags, physicalTags)
 end
 
 struct PhysicalGroup
-  dim::Int8
-  tag::Int8
+  dim::Int64
+  tag::Int64
 
-  function PhysicalGroup(dim::Int, tag::Int)
-    new(dim, tag)
-  end
-  function PhysicalGroup(vals::Array{Int,1})
-    new(vals[1], vals[2])
-  end
+  PhysicalGroup(dim::Int64, tag::Int64) = new(dim, tag)
+  PhysicalGroup(vals::Vector{Int64}) = new(vals[1], vals[2])
 end
 
-struct Elements
-  D0::FMat
-  D1::FMat
-  D2::FMat
-  D3::FMat
+struct PhysicalGroupEntity
+  dim::Int64
+  tag::Int64
+end
 
-  function Elements(vertices, edges, surfaces, volumes)
-    new(FMat(vertices), FMat(edges), FMat(surfaces), FMat(volumes))
-  end
+"""
+...
+"""
+struct PGElements
+  dim::Vector{Int}
+  indices::Vector{Vector{Int}}
+
+  PGElements(dim::Vector{Int}, indices::Vector{Vector{Int}}) = new(dim, indices)
 end

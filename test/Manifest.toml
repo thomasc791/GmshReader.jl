@@ -85,9 +85,9 @@ uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 version = "1.11.0"
 
 [[deps.FlatMat]]
-git-tree-sha1 = "0e07346d1f577f23e7c2c471854913b216c2d6d2"
+git-tree-sha1 = "0a6e9b5e20c90cbfdebd4b73e40d87b4a3ed5e7c"
 uuid = "7c869e6c-c1f0-4866-9669-0eca92445837"
-version = "0.0.1"
+version = "0.0.3"
 
 [[deps.Fontconfig_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Expat_jll", "FreeType2_jll", "JLLWrappers", "Libdl", "Libuuid_jll", "Zlib_jll"]
@@ -251,9 +251,9 @@ version = "1.51.1+0"
 
 [[deps.Libiconv_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "61dfdba58e585066d8bce214c5a51eaa0539f269"
+git-tree-sha1 = "be484f5c92fad0bd8acfef35fe017900b0b73809"
 uuid = "94ce4f54-9a6c-5748-9c1c-f9c7231a4531"
-version = "1.17.0+1"
+version = "1.18.0+0"
 
 [[deps.Libmount_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]

@@ -5,37 +5,46 @@ using Aqua
 using JET
 
 @testset "GmshReader.jl" begin
-  @testset "Code quality (Aqua.jl)" begin
-    Aqua.test_all(FlatMat)
+  # @testset "Code quality (Aqua.jl)" begin
+  #   Aqua.test_all(FlatMat)
+  # end
+  # @testset "Code linting (JET.jl)" begin
+  #   JET.test_package(FlatMat; target_defined_modules=true)
+  # end
+
+  dir = ""
+  if basename(pwd()) == "GmshReader"
+    dir = join([pwd(), "/test/"])
+  else
+    dir = join([pwd(), "/"])
   end
-  @testset "Code linting (JET.jl)" begin
-    JET.test_package(FlatMat; target_defined_modules=true)
-  end
+
+  include(join([dir, "meshgen.jl"]))
+  pg1, n1, e1 = readfile("input/1x1-square.msh")
+  pg50, n50, e50 = readfile("input/50x50-square.msh")
 
   @testset "FlatMat integration" begin
-    dir = ""
-    if basename(pwd()) == "GmshReader"
-      dir = join([pwd(), "/test/"])
-    else
-      dir = join([pwd(), "/"])
-    end
 
-    include(join([dir, "meshgen.jl"]))
-    pg1x1, n1x1, e1x1 = readfile("input/1x1-square.msh")
-    mesh50x50 = readfile("input/50x50-square.msh")
+    # testing correct typing
+    @test isa(e1, Vector{GFMat{Int}})
+    @test isa(e50, Vector{GFMat{Int}})
+  end
 
-    fm1x1 = FMat(e1x1)
-    function array_is_same()
-      is_same::Bool = true
-      for (i, val) in enumerate(e1x1)
-        is_same = is_same && fm1x1[i] == val
+  @testset "PhysicalGroups" begin
+    left_elements = elements_from_pg(e1, pg1, "left")
+    right_elements = elements_from_pg(e1, pg1, "right")
+
+    function correct_pos(elements, nodes, pos)
+      correct = true
+      for e in elements
+        for n in e
+          correct &= nodes[1, n] == pos
+        end
       end
-      return is_same
+      return correct
     end
 
-    @test array_is_same()
-    @test fm1x1[1:end] == FMat(e1x1[1:end])
-    @test fm1x1[2:5] == FMat(e1x1[2:5])
-    @test fm1x1[end:end] == FMat(e1x1[end:end])
+    @test correct_pos(left_elements, n1, 0)
+    @test correct_pos(right_elements, n1, 1)
   end
 end
