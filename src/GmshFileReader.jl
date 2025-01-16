@@ -1,3 +1,11 @@
+"""
+    readfile(file::AbstractString)
+
+Read and parse the `gmsh` .msh file. Returns a dictionary, the nodes, and the elements. The dictionary has the physical groups and corrresponding elements. The nodes consists of the 3xN matrix with xyz coordinates. The elements is a `Vector{GFMat{Int}}` with all elements in the mesh.
+
+# Note
+This function only works for Gmsh file version 4.1. The user also either has to run gmsh with `-save_all` or use the `Mesh.SaveAll` option.
+"""
 function readfile(file::AbstractString)
   f::Vector{String} = readlines(file)
   line = 1
