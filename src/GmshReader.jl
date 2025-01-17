@@ -1,5 +1,6 @@
 module GmshReader
 
+using StaticArrays
 using Base.Threads
 using FlatMat
 

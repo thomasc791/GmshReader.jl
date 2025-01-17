@@ -73,3 +73,4 @@ function elements_from_pg(elements::Vector{GFMat{Int}}, physicalGroups::Dict{Str
   end
   return GFMat(groupElements)
 end
+

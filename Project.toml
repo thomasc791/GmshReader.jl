@@ -5,9 +5,11 @@ version = "0.0.2"
 
 [deps]
 FlatMat = "7c869e6c-c1f0-4866-9669-0eca92445837"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 FlatMat = "0.0.3"
+StaticArrays = "1.9.10"
 Test = "1.11.0"
 julia = "1.11.2"
 

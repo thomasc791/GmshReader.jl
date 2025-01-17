@@ -119,7 +119,7 @@ function readnodes(f::Vector{String}, line)
   entityBlocks, line = parseLine(f, line, Int, true)
   numEntityBlocks = entityBlocks[1]
   numNodes = entityBlocks[2]
-  nodes = Array{Float64,2}(undef, 3, numNodes)
+  nodes = Vector{SVector{3,Float64}}(undef, numNodes)
   @views for e in 1:numEntityBlocks
     entityBlock, line = parseLine(f, line, Int, true)
     elemsInBlock = entityBlock[4]
@@ -127,7 +127,7 @@ function readnodes(f::Vector{String}, line)
     line += elemsInBlock
     nodeVector = split.(f[line:line+elemsInBlock-1], " "; keepempty=false)
     @threads for n in 1:elemsInBlock
-      nodes[1:end, node_index[n]] .= parse.(Float64, nodeVector[n])
+      nodes[node_index[n]] = parse.(Float64, nodeVector[n])
     end
     line += elemsInBlock
   end
