@@ -11,6 +11,7 @@ export PGElements
 
 include("utils.jl")
 export elements_from_pg
+export getelements
 
 include("GmshFileReader.jl")
 

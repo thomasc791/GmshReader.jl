@@ -74,3 +74,19 @@ function elements_from_pg(elements::Vector{GFMat{Int}}, physicalGroups::Dict{Str
   return GFMat(groupElements)
 end
 
+function _parse_vector(elements::Vector{T}, type::Type) where {T}
+  e = Vector{type}(undef, length(elements) - 1)
+  for i in 1:length(elements)-1
+    e[i] = parse(Int, elements[i+1])
+  end
+  return e
+end
+
+"""
+    getelements(elementTypes::Vector{Dict{T1,T2}}, dim::Int) where {T1,T2}
+
+Get all the elements that belong to a certain dimension `dim`.
+"""
+function getelements(elementTypes::Vector{Dict{T1,T2}}, dim::Int) where {T1,T2}
+  return elementTypes[dim+1]
+end

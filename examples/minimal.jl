@@ -1,4 +1,6 @@
 using FlatMat
 using GmshReader
 
-physicalGroups, nodes, elements = readfile("test/input/50x50-square.msh")
+physicalGroups, nodes, elements, elementTypes = readfile("test/input/50x50-square.msh")
+readfile("test/input/50x50-square.msh")
+readfile("test/input/1000x1000-square.msh")
