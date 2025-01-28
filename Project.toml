@@ -1,7 +1,7 @@
 name = "GmshReader"
 uuid = "20219dce-5ca2-40bc-979b-617c665cec18"
 authors = ["Thomas Cheng thomasc791@gmail.com"]
-version = "0.0.3"
+version = "0.0.4"
 
 [deps]
 FlatMat = "7c869e6c-c1f0-4866-9669-0eca92445837"
