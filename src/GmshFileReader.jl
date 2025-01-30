@@ -54,7 +54,7 @@ function read_physical_groups(f::Vector{String}, line)
     groupName = groupInfo[3][2:end-1]
     physGroup = PhysicalGroup(parse.(Int, groupInfo[1:2]))
     get!(groupDict, physGroup, groupName)
-    get!(pgElements, groupName, [[]])
+    get!(pgElements, groupName, [[], []])
   end
   line = checksection(section, f, line; isEnd=true)
   return (groupDict, pgElements, line)
@@ -174,6 +174,7 @@ function readelements!(f::Vector{String}, line, physicalEntities, pgElements)
     end
     if haskey(physicalEntities, pe)
       push!(pgElements[physicalEntities[pe]][1], entDim)
+      push!(pgElements[physicalEntities[pe]][2], eType)
       push!(pgElements[physicalEntities[pe]], (1:elemsInBlock) .+ index)
     end
     index += elemsInBlock
@@ -194,7 +195,7 @@ Convert the vector of vectors with the dimensions and element indices to a dicti
 function _create_physical_groups!(pgElements::Dict{String,Vector{Vector{Int}}})
   pgs = Dict{String,PGElements}()
   for (key, val) in pgElements
-    get!(pgs, key, PGElements(val[1], val[2:end]))
+    get!(pgs, key, PGElements(val[1], val[2], val[3:end]))
   end
   return pgs
 end

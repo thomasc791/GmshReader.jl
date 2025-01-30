@@ -43,7 +43,8 @@ end
 """
 struct PGElements
   dim::Vector{Int}
+  etypes::Vector{Int}
   indices::Vector{Vector{Int}}
 
-  PGElements(dim::Vector{Int}, indices::Vector{Vector{Int}}) = new(dim, indices)
+  PGElements(dim::Vector{Int}, etypes::Vector{Int}, indices::Vector{Vector{Int}}) = new(dim, etypes, indices)
 end
