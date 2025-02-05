@@ -14,7 +14,7 @@ function readfile(file::AbstractString)
   physicalEntities, line = readentities(f, line, physicalGroups)
   _, line = read_partial_entities(f, line)
   nodes, line = readnodes(f, line)
-  @time elements, pgElements, elementTypes, line = readelements!(f, line, physicalEntities, pgElements)
+  elements, pgElements, elementTypes, line = readelements!(f, line, physicalEntities, pgElements)
   return pgElements, nodes, elements, elementTypes
 end
 
