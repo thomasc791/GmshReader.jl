@@ -23,6 +23,9 @@ using JET
   pg1, n1, e1, et1 = readfile("input/1x1-square.msh")
   pg50, n50, e50, et50 = readfile("input/50x50-square.msh")
 
+  pgfm1, nfm1, efm1, etfm1 = readfile("input/1x1-square.msh", true)
+  pgfm50, nfm50, efm50, etfm50 = readfile("input/50x50-square.msh", true)
+
   @testset "FlatMat integration" begin
     # testing correct typing
     @test isa(e1, Vector{GFMat{Int}})
