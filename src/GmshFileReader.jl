@@ -164,8 +164,8 @@ function readelements!(f::Vector{String}, line, physicalEntities, pgElements)
   numEntityBlocks = entityBlocks[1]
   localElements = Vector{Vector{Int}}()
   elements = Vector{GFMat{Int}}()
-  elementTypes = Vector{Dict{Int,Vector{UnitRange}}}()
-  localElementTypes = Dict{Int,Vector{UnitRange}}()
+  elementTypes = Vector{Dict{Int,Vector{UnitRange{<:Int}}}}()
+  localElementTypes = Dict{Int,Vector{UnitRange{<:Int}}}()
   size, dim, index = 0, 0, 0
   @views for _ in 1:numEntityBlocks
     entityBlock, line = parseLine(f, line, Int, true)
@@ -175,7 +175,7 @@ function readelements!(f::Vector{String}, line, physicalEntities, pgElements)
       push!(elements, GFMat(localElements))
       push!(elementTypes, localElementTypes)
       localElements = Vector{Vector{Int}}()
-      localElementTypes = Dict{Int,Vector{UnitRange}}()
+      localElementTypes = Dict{Int,Vector{UnitRange{<:Int}}}()
     end
     pe = PhysicalGroupEntity(entDim, entTag)
     elemsInBlock = entityBlock[4]
@@ -216,8 +216,8 @@ function readelementsfm!(f::Vector{String}, line, physicalEntities, pgElements)
   numEntityBlocks = entityBlocks[1]
   localElements = Vector{Vector{Int}}()
   elements = Vector{FMat{Int}}()
-  elementTypes = Vector{Dict{Int,Vector{UnitRange}}}()
-  localElementTypes = Dict{Int,Vector{UnitRange}}()
+  elementTypes = Vector{Dict{Int,Vector{UnitRange{<:Int}}}}()
+  localElementTypes = Dict{Int,Vector{UnitRange{<:Int}}}()
   size, dim, index = 0, 0, 0
   @views for _ in 1:numEntityBlocks
     entityBlock, line = parseLine(f, line, Int, true)
@@ -227,7 +227,7 @@ function readelementsfm!(f::Vector{String}, line, physicalEntities, pgElements)
       push!(elements, FMat(localElements))
       push!(elementTypes, localElementTypes)
       localElements = Vector{Vector{Int}}()
-      localElementTypes = Dict{Int,Vector{UnitRange}}()
+      localElementTypes = Dict{Int,Vector{UnitRange{<:Int}}}()
     end
     pe = PhysicalGroupEntity(entDim, entTag)
     elemsInBlock = entityBlock[4]
