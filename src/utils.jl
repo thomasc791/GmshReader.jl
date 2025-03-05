@@ -64,7 +64,7 @@ end
 
 Get all elements that belong to a physical group with string `group`.
 """
-function elements_from_pg(elements::Vector{GFMat{Int}}, physicalGroups::Dict{String,PGElements}, group::String)
+function elements_from_pg(elements::Vector{V}, physicalGroups::Dict{String,PGElements}, group::String) where {V<:AbstractArray}
   pg = physicalGroups[group]
   groupElements = Vector{Vector{Int}}()
   for (i, d) in enumerate(pg.dim)

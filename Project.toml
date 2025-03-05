@@ -1,13 +1,13 @@
 name = "GmshReader"
 uuid = "20219dce-5ca2-40bc-979b-617c665cec18"
 authors = ["Thomas Cheng thomasc791@gmail.com"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 FlatMat = "7c869e6c-c1f0-4866-9669-0eca92445837"
 
 [compat]
-FlatMat = "0.1.0"
+FlatMat = "0.1"
 Test = "1.11.0"
 julia = "1.11.2"
 
