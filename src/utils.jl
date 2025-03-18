@@ -60,24 +60,24 @@ function checkpossiblesection(sectionName::String, f, line)
 end
 
 """
-    elements_from_pg(elements::Vector{GFMat{Int}}, physicalGroups::Dict{String,PGElements}, group::String)
+    elements_from_pg(elements, physicalGroups::Dict{String,PGElements}, group::String)
 
 Get all elements that belong to a physical group with string `group`.
 """
-function elements_from_pg(elements::Vector{V}, physicalGroups::Dict{String,PGElements}, group::String) where {V<:AbstractArray}
+function elements_from_pg(elements, physicalGroups::Dict{String,PGElements}, group::String)
   pg = physicalGroups[group]
   groupElements = Vector{Vector{Int}}()
   for (i, d) in enumerate(pg.dim)
     currentGroup = pg.indices[i]
     append!(groupElements, elements[d+1][currentGroup])
   end
-  return GFMat(groupElements)
+  return groupElements
 end
 
-function _parse_vector(elements::Vector{T}, type::Type) where {T}
-  e = Vector{type}(undef, length(elements) - 1)
+function _parse_vector!(elements, type::Type)
+  e = Vector{Int64}(undef, length(elements) - 1)
   for i in 1:length(elements)-1
-    e[i] = parse(Int, elements[i+1])
+    e[i] = parse(type, elements[i+1])
   end
   return e
 end

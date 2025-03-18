@@ -19,23 +19,6 @@ function readfile(file::String)
 end
 
 """
-    readfile(file::String, ::Bool)
-
-`readfile` but uses FMat instead of GFMat.
-"""
-function readfile(file::String, ::Bool)
-  f = readlines(file)
-  line = 1
-  line = readformat(f, line)
-  physicalGroups, pgElements, line = read_physical_groups(f, line)
-  physicalEntities, line = readentities(f, line, physicalGroups)
-  _, line = read_partial_entities(f, line)
-  nodes, line = readnodes(f, line)
-  elements, pgElements, elementTypes, line = readelementsfm!(f, line, physicalEntities, pgElements)
-  return pgElements, nodes, elements, elementTypes
-end
-
-"""
 readformat(f::Vector{String}, line)
 
 Read and check the format of a file. Gives an error is the file format is not 4.1, otherwise it will return the current line number.
@@ -128,7 +111,7 @@ end
 """
     readnodes(f::Vector{String}, line)
 
-Read the nodes, and return the matrix of the read nodes. Julia is column-major, so the matrix is 3xN rather than Nx3.
+Read the nodes, and return the matrix of the read nodes. Julia is column-major, so the matrix is 3xN rather than Nx3. Most of the operations in this function use the broadcasting `.` operator for computational efficiency. But a lot of speed can be gained in the line marked with # <---.
 """
 function readnodes(f::Vector{String}, line)
   section = "Nodes"
@@ -142,8 +125,8 @@ function readnodes(f::Vector{String}, line)
     elemsInBlock = entityBlock[4]
     nodeIndex = parse.(Int, f[line:line+elemsInBlock-1])
     line += elemsInBlock
-    nodeVector = split.(f[line:line+elemsInBlock-1], " "; keepempty=false)
-    for n in 1:elemsInBlock
+    nodeVector = split.(f[line:line+elemsInBlock-1], " "; keepempty=false) # <---
+    Threads.@threads for n in 1:elemsInBlock
       nodes[:, nodeIndex[n]] .= parse.(Float64, nodeVector[n])
     end
     line += elemsInBlock
@@ -160,97 +143,48 @@ Read the elements, and return the elements and a Dict containing the physical gr
 function readelements!(f::Vector{String}, line, physicalEntities, pgElements)
   section = "Elements"
   line = checksection(section, f, line)
-  entityBlocks, line = parseLine(f, line, Int, true)
+  entityBlocks, line = parseLine(f, line, Int64, true)
   numEntityBlocks = entityBlocks[1]
-  localElements = Vector{Vector{Int}}()
-  elements = Vector{GFMat{Int}}()
-  elementTypes = Vector{Dict{Int,Vector{UnitRange{<:Int}}}}()
-  localElementTypes = Dict{Int,Vector{UnitRange{<:Int}}}()
+
+  elements = Vector{Vector{Vector{Int64}}}()
+  elementTypes = Vector{Dict{Int,Vector{UnitRange{Int64}}}}()
+  elementsInDim = Vector{Vector{Int64}}()
+  etypesInDim = Dict{Int,Vector{UnitRange{Int64}}}()
+
   size, dim, index = 0, 0, 0
-  @views for _ in 1:numEntityBlocks
-    entityBlock, line = parseLine(f, line, Int, true)
+  for _ in 1:numEntityBlocks
+    entityBlock, line = parseLine(f, line, Int64, true)
     entDim, entTag, eType = entityBlock[1:3]
     if dim != entDim
       dim, size, index = entDim, 0, 0
-      push!(elements, GFMat(localElements))
-      push!(elementTypes, localElementTypes)
-      localElements = Vector{Vector{Int}}()
-      localElementTypes = Dict{Int,Vector{UnitRange{<:Int}}}()
+      push!(elements, elementsInDim)
+      push!(elementTypes, etypesInDim)
+      elementsInDim = Vector{Vector{Int}}()
+      etypesInDim = Dict{Int,Vector{UnitRange{Int64}}}()
     end
     pe = PhysicalGroupEntity(entDim, entTag)
     elemsInBlock = entityBlock[4]
-    if !haskey(localElementTypes, eType)
-      get!(localElementTypes, eType, [range(index + 1, index + elemsInBlock)])
+    if !haskey(etypesInDim, eType)
+      get!(etypesInDim, eType, [range(index + 1, index + elemsInBlock)])
     else
-      push!(localElementTypes[eType], range(index + 1, index + elemsInBlock))
+      push!(etypesInDim[eType], range(index + 1, index + elemsInBlock))
     end
+    # Read and split element string in current block
     nodeVector = split.(f[line:line+elemsInBlock-1], " "; keepempty=false)
-    resize!(localElements, size += elemsInBlock)
-    for n in 1:elemsInBlock
-      localElements[index+n] = _parse_vector(nodeVector[n], Int)
+    resize!(elementsInDim, size += elemsInBlock)
+    Threads.@threads for n in 1:elemsInBlock
+      elementsInDim[index+n] = _parse_vector!(nodeVector[n], Int64)
     end
     if haskey(physicalEntities, pe)
       push!(pgElements[physicalEntities[pe]][1], entDim)
       push!(pgElements[physicalEntities[pe]][2], eType)
-      push!(pgElements[physicalEntities[pe]], (1:elemsInBlock) .+ index)
+      push!(pgElements[physicalEntities[pe]], range(index + 1, index + elemsInBlock))
     end
     index += elemsInBlock
     line += elemsInBlock
   end
-  push!(elementTypes, localElementTypes)
-  push!(elements, GFMat(localElements))
-  pgs = _create_physical_groups!(pgElements)
-  line = checksection(section, f, line; isEnd=true)
-  return (elements, pgs, elementTypes, line)
-end
-
-"""
-    readelementsfm!(f::Vector{String}, line, physicalEntities, pgElements)
-
-Read the elements, and return the elements and a Dict containing the physical group name corresponding to the element indices. The elements are returned as a vector of `FMat`. It loops over the all the entities and checks if it belongs to a physical group. If it does, it adds the element indices to the physical group. The elements are separated per dimension so it is necessary to store the dimensionality of the elements as well.
-"""
-function readelementsfm!(f::Vector{String}, line, physicalEntities, pgElements)
-  section = "Elements"
-  line = checksection(section, f, line)
-  entityBlocks, line = parseLine(f, line, Int, true)
-  numEntityBlocks = entityBlocks[1]
-  localElements = Vector{Vector{Int}}()
-  elements = Vector{FMat{Int}}()
-  elementTypes = Vector{Dict{Int,Vector{UnitRange{<:Int}}}}()
-  localElementTypes = Dict{Int,Vector{UnitRange{<:Int}}}()
-  size, dim, index = 0, 0, 0
-  @views for _ in 1:numEntityBlocks
-    entityBlock, line = parseLine(f, line, Int, true)
-    entDim, entTag, eType = entityBlock[1:3]
-    if dim != entDim
-      dim, size, index = entDim, 0, 0
-      push!(elements, FMat(localElements))
-      push!(elementTypes, localElementTypes)
-      localElements = Vector{Vector{Int}}()
-      localElementTypes = Dict{Int,Vector{UnitRange{<:Int}}}()
-    end
-    pe = PhysicalGroupEntity(entDim, entTag)
-    elemsInBlock = entityBlock[4]
-    if !haskey(localElementTypes, eType)
-      get!(localElementTypes, eType, [range(index + 1, index + elemsInBlock)])
-    else
-      push!(localElementTypes[eType], range(index + 1, index + elemsInBlock))
-    end
-    nodeVector = split.(f[line:line+elemsInBlock-1], " "; keepempty=false)
-    resize!(localElements, size += elemsInBlock)
-    for n in 1:elemsInBlock
-      localElements[index+n] = _parse_vector(nodeVector[n], Int)
-    end
-    if haskey(physicalEntities, pe)
-      push!(pgElements[physicalEntities[pe]][1], entDim)
-      push!(pgElements[physicalEntities[pe]][2], eType)
-      push!(pgElements[physicalEntities[pe]], (1:elemsInBlock) .+ index)
-    end
-    index += elemsInBlock
-    line += elemsInBlock
-  end
-  push!(elementTypes, localElementTypes)
-  push!(elements, FMat(localElements))
+  push!(elementTypes, etypesInDim)
+  push!(elements, elementsInDim)
   pgs = _create_physical_groups!(pgElements)
   line = checksection(section, f, line; isEnd=true)
   return (elements, pgs, elementTypes, line)
@@ -260,7 +194,7 @@ end
 
 Convert the vector of vectors with the dimensions and element indices to a dictionary with the group name and the corresponding `PGElements`.
 """
-function _create_physical_groups!(pgElements::Dict{String,Vector{Vector{Int}}})
+function _create_physical_groups!(pgElements)
   pgs = Dict{String,PGElements}()
   for (key, val) in pgElements
     get!(pgs, key, PGElements(val[1], val[2], val[3:end]))

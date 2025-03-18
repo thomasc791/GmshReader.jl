@@ -1,7 +1,6 @@
 module GmshReader
 
 using Base.Threads
-using FlatMat
 
 include("Types.jl")
 export Entity
